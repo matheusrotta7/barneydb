@@ -6,6 +6,8 @@ use std::io;
 use std::io::{BufRead, Write};
 
 use std::fs::read_to_string;
+use std::ptr::null;
+use indexmap::IndexMap;
 
 fn read_lines(filename: &str) -> Vec<String> {
     read_to_string(filename)
@@ -26,10 +28,12 @@ fn main() {
             let table_name = create_table(cur_line);
             i += 1;
             let column_map = get_columns(Vec::from(&lines[1..]), i);
-            let mut file = File::open(table_name).unwrap();
+            let mut file = File::create(table_name).unwrap();
             for (column_name, column_type) in column_map.into_iter() {
-                file.write(column_name.as_bytes());
-                file.write(";".as_bytes());
+                let (type_name, type_size) = column_type;
+                println!("Column {}: {} ({})", column_name, type_name, type_size);
+                // write to file safely
+                write!(file, "{} {} ; ", column_name, format!("{} {}", type_name, type_size)).unwrap();
             }
             file.flush();
             break;
@@ -38,9 +42,9 @@ fn main() {
 
 }
 
-fn get_columns(lines: Vec<String>, i: usize) -> HashMap<String, String> {
+fn get_columns(lines: Vec<String>, i: usize) -> IndexMap<String, (String, String)> {
 
-    let mut column_map: HashMap<String,String> = HashMap::new();
+    let mut column_map: IndexMap<String, (String, String)> = IndexMap::new();
 
     let mut i = 0;
 
@@ -52,15 +56,31 @@ fn get_columns(lines: Vec<String>, i: usize) -> HashMap<String, String> {
         }
         //cur_line should be a column declaration of the form:
         // column1 datatype,
-        // employee_name string(5), --make it different from oracle by using string
-        // enroll_date date,
+        // employee_name string 5, --make it different from oracle by using string
+        // enroll_date instant,
         // special_commision bool,
         // ...
         let mut tokens = cur_line.split_whitespace();
         i += 1;
-        let column_name = tokens.next().unwrap();
-        let column_type = tokens.next().unwrap();
-        column_map.insert(column_name.to_string(),column_type.to_string());
+        let mut column_name = tokens.next().unwrap().to_string();
+        if column_name.ends_with(":") {
+            column_name.pop();
+        }
+
+        let mut column_type = tokens.next().unwrap().to_string();
+        if (column_type.ends_with(",")) {
+            column_type.pop();
+        }
+
+        let mut column_quantifier = "".to_string();
+        if let Some(quantifier_token) = tokens.next() {
+            // safe: you still have the token
+            column_quantifier = quantifier_token.to_string()
+        }
+        if (column_quantifier.ends_with(",")) {
+            column_quantifier.pop();
+        }
+        column_map.insert(column_name,(column_type,column_quantifier.clone()));
     }
     println!("{}", i);
     column_map
