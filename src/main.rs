@@ -1,4 +1,5 @@
 mod tests;
+mod create_table;
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -20,105 +21,61 @@ fn read_lines(filename: &str) -> Vec<String> {
 
 fn main() {
 
-    let lines = read_lines("C:\\Users\\mathe\\RustroverProjects\\barneydb\\src\\input.bsql");
+    let lines = read_lines("C:\\Users\\mathe\\RustroverProjects\\barneydb\\src\\insert.bsql");
 
     for mut i in 0..lines.len() {
         let cur_line = lines[i].clone(); //rust is verbose in its memory strategies, which might not be bad in the long run
         if cur_line.starts_with("create table") {
-            let table_name = create_table(cur_line);
-            i += 1;
-            let column_map = get_columns(Vec::from(&lines[1..]), i);
-            let mut file = File::create(table_name).unwrap();
-            for (column_name, column_type) in column_map.into_iter() {
-                let (type_name, type_size) = column_type;
-                println!("Column {}: {} ({})", column_name, type_name, type_size);
-                // write to file safely
-                write!(file, "{} {} ; ", column_name, format!("{} {}", type_name, type_size)).unwrap();
-            }
-            file.flush();
+            create_table::create_table(&lines, i, cur_line);
+            break;
+        } else if cur_line.starts_with("add new") {
+            let table_name = get_table_name(cur_line);
+            let column_map = get_column_map(lines.clone(),  i);
+            insert_values_into_file(table_name, &column_map);
             break;
         }
     }
 
 }
 
-fn get_columns(lines: Vec<String>, i: usize) -> IndexMap<String, (String, String)> {
+fn get_column_map(lines: Vec<String>, i:  usize) -> IndexMap<String, String> {
+    let mut column_map: IndexMap<String, String> = IndexMap::new();
 
-    let mut column_map: IndexMap<String, (String, String)> = IndexMap::new();
-
-    let mut i = 0;
-
-    //get columns using the current lines and the current i index
     for j in i..lines.len() {
         let cur_line = lines[j].clone();
-        if (cur_line.contains("}")) {
-            break;
-        }
-        //cur_line should be a column declaration of the form:
-        // column1 datatype,
-        // employee_name string 5, --make it different from oracle by using string
-        // enroll_date instant,
-        // special_commision bool,
-        // ...
+        // add new employee {
+        //     name -> "Matheus",
+        //     age -> 29,
+        //     date_of_birth -> instant("02/09/1996", "dd/mm/yyyy"),
+        //     salary -> 200
+        // }
         let mut tokens = cur_line.split_whitespace();
-        i += 1;
-        let mut column_name = tokens.next().unwrap().to_string();
-        if column_name.ends_with(":") {
-            column_name.pop();
-        }
-
-        let mut column_type = tokens.next().unwrap().to_string();
-        if (column_type.ends_with(",")) {
-            column_type.pop();
-        }
-
-        let mut column_quantifier = "".to_string();
-        if let Some(quantifier_token) = tokens.next() {
-            // safe: you still have the token
-            column_quantifier = quantifier_token.to_string()
-        }
-        if (column_quantifier.ends_with(",")) {
-            column_quantifier.pop();
-        }
-        column_map.insert(column_name,(column_type,column_quantifier.clone()));
+        let column_name = tokens.next().unwrap().to_string();
+        assert_eq!(tokens.next().unwrap().to_string(), "->");
+        let column_value = tokens.next().unwrap().to_string();
+        column_map.insert(column_name, column_value);
     }
-    println!("{}", i);
     column_map
-
 }
 
-fn create_table(cur_line: String) -> String {
-    /*
-    CREATE TABLE table_name (
-        column1 datatype,
-        column2 datatype,
-        column3 datatype,
-       ....
-    );
-     */
-    let mut table_name: String = "uninitialized".to_string();
-    let tokens = cur_line.split_whitespace();
-    for cur_token in tokens {
-        println!("{}", cur_token);
-        if cur_token == "create" {
-            continue;
-        } else if cur_token == "table" {
-            continue;
-        } else if cur_token != "{" {
-            //then it must be the table_name
-            table_name = cur_token.to_string();
-        } else {
-            // should be the opening brackets
-        }
-    }
-
-    if (table_name != "uninitialized") {
-        File::create(table_name.clone()).unwrap();
-        return table_name;
-    } else {
-        //throw error todo
-        println!("No table name found.");
-        return "error".to_string();
-    }
-
+fn get_table_name(cur_line: String) -> String {
+    let mut tokens = cur_line.split_whitespace();
+    let mut cur_token = tokens.next().unwrap();
+    let mut table_name = "uninitialized".to_string();
+    assert_eq!(cur_token, "add");
+    cur_token = tokens.next().unwrap();
+    assert_eq!(cur_token, "new");
+    table_name = tokens.next().unwrap().to_string();
+    table_name
 }
+
+fn insert_values_into_file(table_name: String, columnMap: &IndexMap<String, String>) {
+    //open file
+    //go to last line
+    //create new line
+    //for each entry in column map, locate the correct column and insert the correct value
+    //it's easier if it's in the canonical order
+    //maybe order by canonical order first and then insert
+    todo!()
+}
+
