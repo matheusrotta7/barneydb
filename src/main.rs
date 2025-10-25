@@ -4,7 +4,7 @@ mod create_table;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io;
-use std::io::{BufRead, Write};
+use std::io::{BufRead, Read, Write};
 
 use std::fs::read_to_string;
 use std::ptr::null;
@@ -30,7 +30,7 @@ fn main() {
             break;
         } else if cur_line.starts_with("add new") {
             let table_name = get_table_name(cur_line);
-            let column_map = get_column_map(lines.clone(),  i);
+            let column_map = get_column_map(lines.clone(),  i+1);
             insert_values_into_file(table_name, &column_map);
             break;
         }
@@ -49,6 +49,9 @@ fn get_column_map(lines: Vec<String>, i:  usize) -> IndexMap<String, String> {
         //     date_of_birth -> instant("02/09/1996", "dd/mm/yyyy"),
         //     salary -> 200
         // }
+        if cur_line.contains("}") {
+            break;
+        }
         let mut tokens = cur_line.split_whitespace();
         let column_name = tokens.next().unwrap().to_string();
         assert_eq!(tokens.next().unwrap().to_string(), "->");
@@ -69,13 +72,45 @@ fn get_table_name(cur_line: String) -> String {
     table_name
 }
 
-fn insert_values_into_file(table_name: String, columnMap: &IndexMap<String, String>) {
+fn insert_values_into_file(table_name: String, valuesMap: &IndexMap<String, String>) {
     //open file
     //go to last line
     //create new line
     //for each entry in column map, locate the correct column and insert the correct value
     //it's easier if it's in the canonical order
     //maybe order by canonical order first and then insert
-    todo!()
+    let lines = read_lines(&*table_name);
+    let first_line = lines[0].clone();
+    let mut canonical_column_map: IndexMap<String, (String, String)> = IndexMap::new();
+    canonical_column_map = get_canonical_columns(first_line);
+    for (column_name, column_type) in canonical_column_map {
+        valuesMap[column_name];
+    }
+}
+
+fn get_canonical_columns(table_header: String) -> IndexMap<String, (String, String)> {
+
+    let mut result: IndexMap<String, (String,String)> = IndexMap::new();
+
+    let columns = table_header.split(";").clone();
+
+    for cur_column in columns {
+        let mut tokens = cur_column.split_whitespace();
+        if (cur_column == " ") {
+            break;
+        }
+
+        let column_name = tokens.next().unwrap().to_string();
+        let column_type = tokens.next().unwrap().to_string();
+        let mut column_quantifier = "uninitialized".to_string();
+        if let Some(quantifier_token) = tokens.next() {
+            // safe: you still have the token
+            column_quantifier = quantifier_token.to_string()
+        }
+
+        result.insert(column_name, (column_type, column_quantifier));
+    }
+
+    result
 }
 

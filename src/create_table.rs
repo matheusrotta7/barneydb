@@ -25,7 +25,7 @@ fn get_columns(lines: Vec<String>, i: usize) -> IndexMap<String, (String, String
     //get columns using the current lines and the current i index
     for j in i..lines.len() {
         let cur_line = lines[j].clone();
-        if (cur_line.contains("}")) {
+        if cur_line.contains("}") {
             break;
         }
         //cur_line should be a column declaration of the form:
@@ -88,11 +88,11 @@ fn create_table_file(cur_line: String) -> String {
 
     if (table_name != "uninitialized") {
         File::create(table_name.clone()).unwrap();
-        return table_name;
+        table_name
     } else {
         //throw error todo
         println!("No table name found.");
-        return "error".to_string();
+        "error".to_string()
     }
 
 }
