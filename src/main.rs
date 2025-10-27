@@ -2,7 +2,7 @@ mod tests;
 mod create_table;
 
 use std::collections::HashMap;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufRead, Read, Write};
 
@@ -83,9 +83,40 @@ fn insert_values_into_file(table_name: String, valuesMap: &IndexMap<String, Stri
     let first_line = lines[0].clone();
     let mut canonical_column_map: IndexMap<String, (String, String)> = IndexMap::new();
     canonical_column_map = get_canonical_columns(first_line);
+
+    let mut column_values: Vec<String> = Vec::new();
     for (column_name, column_type) in canonical_column_map {
-        valuesMap[column_name];
+        let option = valuesMap.get(&column_name);
+        let mut column_value_string = option.unwrap().to_string();
+        if column_value_string.ends_with(',') {
+            column_value_string.pop();
+        }
+        println!("{}", column_value_string);
+
+        if (!value_respects_type_constraints(column_type.clone(), column_value_string.clone())) {
+            println!("{} with value {} didn't respect type {}", column_name, column_value_string, column_type.0 + column_type.1.as_str());
+            panic!("crash and burn");
+        }
+        column_values.push(column_value_string);
     }
+
+    insert_values_in_bottom_of_file(column_values, table_name).expect("TODO: panic message");
+}
+
+fn value_respects_type_constraints(p0: (String, String), p1: String) -> bool {
+    todo!()
+}
+
+fn insert_values_in_bottom_of_file(column_values: Vec<String>, table_name: String) -> std::io::Result<()> {
+    let mut file = OpenOptions::new()
+        .append(true) // open in append mode
+        .create(true) // create file if it doesn’t exist
+        .open(table_name)?;
+
+    let new_line = format!("{}\n", column_values.join(";"));
+
+    writeln!(file, "{}", new_line.to_string())?;
+    Ok(())
 }
 
 fn get_canonical_columns(table_header: String) -> IndexMap<String, (String, String)> {
@@ -96,7 +127,7 @@ fn get_canonical_columns(table_header: String) -> IndexMap<String, (String, Stri
 
     for cur_column in columns {
         let mut tokens = cur_column.split_whitespace();
-        if (cur_column == " ") {
+        if (cur_column == " " || cur_column.is_empty()) {
             break;
         }
 

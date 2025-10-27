@@ -1,6 +1,6 @@
 add new employee {
     name -> "Matheus",
     age -> 29,
-    date_of_birth -> instant("02/09/1996", "dd/mm/yyyy"),
+    date_of_birth -> instant("02/09/1996","dd/mm/yyyy"),
     salary -> 200
 }

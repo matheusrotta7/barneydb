@@ -1,1 +1,3 @@
-name string 100 ; age int 5 ; date_of_birth instant  ; salary int 10 ; 
+name string 100 ; age int 5 ; date_of_birth instant  ; salary int 10 ;
+"Matheus";29;instant("02/09/1996","dd/mm/yyyy");200
+
