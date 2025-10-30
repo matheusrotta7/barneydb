@@ -105,9 +105,9 @@ fn insert_values_into_file(table_name: String, valuesMap: &IndexMap<String, Stri
 }
 
 fn value_respects_type_constraints(column_type: (String, String), column_value_string: String) -> bool {
-    if (column_type.0 == "string") {
+    if column_type.0 == "string" {
         //then expect "sample_string" and check if it's not bigger than max size
-        let pattern = r#"(([A-Za-z0-9]|_)+)"#;
+        let pattern = r#""(([A-Za-z0-9]|_)+)""#;
         let re = Regex::new(pattern).unwrap();
 
 
@@ -121,8 +121,32 @@ fn value_respects_type_constraints(column_type: (String, String), column_value_s
             false
         }
 
-    } else if (column_type.0 == "int") {
-        todo!()
+    } else if column_type.0 == "int" {
+        //then expect 3456 and check if it's not bigger than max size
+        let pattern = r"\d+";
+        let re = Regex::new(pattern).unwrap();
+
+        if re.is_match(column_value_string.as_str()) {
+            println!("The integer matches the pattern!");
+            let max_int_size = column_type.1.parse().unwrap();
+            column_value_string.len() <= max_int_size
+        } else {
+            println!("No match.");
+            false
+        }
+    } else if column_type.0 == "instant" {
+        let pattern = r#"instant\("\d\d/\d\d/\d\d\d\d","dd/mm/yyyy"\)"#;
+        let re = Regex::new(pattern).unwrap();
+
+        if re.is_match(column_value_string.as_str()) {
+            println!("The instant matches the pattern!");
+            true
+        } else {
+            println!("No match.");
+            false
+        }
+    } else {
+        panic!("Unexpected column type: {}", column_type.0);
     }
 }
 
