@@ -1,19 +1,27 @@
+use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::process::exit;
 use indexmap::IndexMap;
+
+use colored::Colorize;
+
 
 pub(crate) fn create_table(lines: &Vec<String>, mut i: usize, cur_line: String) {
     let table_name = create_table_file(cur_line);
     i += 1;
     let column_map = get_columns(Vec::from(&lines[1..]), i);
-    let mut file = File::create(table_name).unwrap();
+    let mut file = File::create(table_name.clone()).unwrap();
     for (column_name, column_type) in column_map.into_iter() {
         let (type_name, type_size) = column_type;
-        println!("Column {}: {} ({})", column_name, type_name, type_size);
+        // println!("Column {}: {} ({})", column_name, type_name, type_size);
         // write to file safely
         write!(file, "{} {} ; ", column_name, format!("{} {}", type_name, type_size)).unwrap();
     }
+    writeln!(file).unwrap();
     file.flush();
+    let msg = format!("Table {} created successfully", table_name);
+    println!("{}", msg.green());
 }
 
 fn get_columns(lines: Vec<String>, i: usize) -> IndexMap<String, (String, String)> {
@@ -56,7 +64,7 @@ fn get_columns(lines: Vec<String>, i: usize) -> IndexMap<String, (String, String
         }
         column_map.insert(column_name,(column_type,column_quantifier.clone()));
     }
-    println!("{}", i);
+    // println!("{}", i);
     column_map
 
 }
@@ -73,8 +81,8 @@ fn create_table_file(cur_line: String) -> String {
     let mut table_name: String = "uninitialized".to_string();
     let tokens = cur_line.split_whitespace();
     for cur_token in tokens {
-        println!("{}", cur_token);
-        if cur_token == "create" {
+        // println!("{}", cur_token);
+        if cur_token == "new" {
             continue;
         } else if cur_token == "table" {
             continue;
@@ -87,6 +95,11 @@ fn create_table_file(cur_line: String) -> String {
     }
 
     if (table_name != "uninitialized") {
+        if fs::exists(table_name.clone()).expect("REASON") {
+            let msg = format!("Table {} already exists", table_name);
+            println!("{}", msg.red());
+            exit(0);
+        }
         File::create(table_name.clone()).unwrap();
         table_name
     } else {

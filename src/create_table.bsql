@@ -1,4 +1,4 @@
-create table employee {
+new table employee {
 
     name: string 100,
     age:  int 5,

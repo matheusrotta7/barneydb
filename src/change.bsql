@@ -1,0 +1,1 @@
+change employee set salary = 7000 if name = "Matheus";
