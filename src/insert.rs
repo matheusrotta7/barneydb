@@ -2,7 +2,7 @@ use std::io::Write;
 use std::fs::OpenOptions;
 use indexmap::IndexMap;
 use regex::Regex;
-use crate::read_lines;
+use crate::{canonical_columns, read_lines};
 
 pub(crate) fn insert_into_table(lines: Vec<String>, mut i: usize, cur_line: String) {
     let table_name = get_table_name(cur_line);
@@ -53,8 +53,7 @@ fn insert_values_into_file(table_name: String, valuesMap: &IndexMap<String, Stri
     //maybe order by canonical order first and then insert
     let lines = read_lines(&*table_name);
     let first_line = lines[0].clone();
-    let mut canonical_column_map: IndexMap<String, (String, String)> = IndexMap::new();
-    canonical_column_map = get_canonical_columns(first_line);
+    let canonical_column_map  = canonical_columns::get_canonical_columns(first_line);
 
     let mut column_values: Vec<String> = Vec::new();
     for (column_name, column_type) in canonical_column_map {
@@ -133,28 +132,3 @@ fn insert_values_in_bottom_of_file(column_values: Vec<String>, table_name: Strin
     Ok(())
 }
 
-fn get_canonical_columns(table_header: String) -> IndexMap<String, (String, String)> {
-
-    let mut result: IndexMap<String, (String,String)> = IndexMap::new();
-
-    let columns = table_header.split(";").clone();
-
-    for cur_column in columns {
-        let mut tokens = cur_column.split_whitespace();
-        if (cur_column == " " || cur_column.is_empty()) {
-            break;
-        }
-
-        let column_name = tokens.next().unwrap().to_string();
-        let column_type = tokens.next().unwrap().to_string();
-        let mut column_quantifier = "uninitialized".to_string();
-        if let Some(quantifier_token) = tokens.next() {
-            // safe: you still have the token
-            column_quantifier = quantifier_token.to_string()
-        }
-
-        result.insert(column_name, (column_type, column_quantifier));
-    }
-
-    result
-}
