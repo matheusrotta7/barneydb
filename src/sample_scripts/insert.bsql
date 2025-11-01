@@ -1,0 +1,6 @@
+add new employee {
+    name -> "Josh",
+    age -> 44,
+    date_of_birth -> instant("01/01/1969","dd/mm/yyyy"),
+    salary -> 1000
+}
