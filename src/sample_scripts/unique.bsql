@@ -1,0 +1,1 @@
+define uniqueness for employee as (name, age);

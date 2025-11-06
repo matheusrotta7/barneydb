@@ -10,6 +10,7 @@ use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 
 use std::fs::{read_to_string, File, OpenOptions};
+use regex::Regex;
 
 fn read_lines(filename: &str) -> Vec<String> {
     read_to_string(filename)
@@ -39,12 +40,45 @@ fn main() {
             remove::remove_main(cur_line);
             break;
         } else if cur_line.starts_with("get") { //prints all records given a criteria
-            //get employee if name = "Alessandra";
             get::get_main(cur_line);
             break;
+        } else if cur_line.starts_with("define uniqueness") {
+            //define uniqueness for employee as (name, age);
+            let mut tokens = cur_line.split_whitespace();
+
+            let mut cur_token = tokens.next().unwrap().to_string();
+            assert_eq!(cur_token, "define");
+
+            cur_token = tokens.next().unwrap().to_string();
+            assert_eq!(cur_token, "uniqueness");
+
+            cur_token = tokens.next().unwrap().to_string();
+            assert_eq!(cur_token, "for");
+
+            let table_name = tokens.next().unwrap().to_string();
+
+            cur_token = tokens.next().unwrap().to_string();
+            assert_eq!(cur_token, "as");
+
+            let column_set_string = tokens.next().unwrap().to_string();
+            let re = Regex::new(r", ?").unwrap();
+            let unique_columns: Vec<&str> = re.split(&*column_set_string).collect(); //vector of columns that compose the uniqueness criteria (primary key)
+
+            impose_uniqueness(table_name, unique_columns);
         }
     }
 
+}
+
+fn impose_uniqueness(table_name: String, unique_columns: Vec<&str>) {
+    //open table file
+    //check if the table already has a uniqueness criteria
+    //if it does, report it and stop. Recommend dropping it and recreating the new criteria
+    //if it doesn't, add the uniqueness criteria to the table file (must understand where to store it)
+    //metadata in the table for now is just the header with the column names and types,
+    //but if it grows too much, it should be stored in a separate file
+    //maybe it could be a table folder, with a metadata file, and a data file
+    //and if one day we want to do partitions, each partition could be a file
 }
 
 
