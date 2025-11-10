@@ -2,7 +2,7 @@ use std::io::Write;
 use std::fs::OpenOptions;
 use indexmap::IndexMap;
 use regex::Regex;
-use crate::{canonical_columns, read_lines};
+use crate::{canonical_columns, main_db};
 
 pub(crate) fn insert_into_table(lines: Vec<String>, mut i: usize, cur_line: String) {
     let table_name = get_table_name(cur_line);
@@ -51,7 +51,7 @@ fn insert_values_into_file(table_name: String, valuesMap: &IndexMap<String, Stri
     //for each entry in column map, locate the correct column and insert the correct value
     //it's easier if it's in the canonical order
     //maybe order by canonical order first and then insert
-    let lines = read_lines(&*table_name);
+    let lines = main_db::read_lines(&*table_name);
     let first_line = lines[0].clone();
     let canonical_column_map  = canonical_columns::get_canonical_columns(first_line);
 
