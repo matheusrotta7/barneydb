@@ -1,4 +1,3 @@
-mod tests;
 mod create_table;
 mod insert;
 mod canonical_columns;
@@ -6,12 +5,6 @@ mod change;
 mod remove;
 mod get;
 mod main_db;
-
-use std::fs;
-use std::io::{BufRead, BufReader, Read, Write};
-
-use std::fs::{read_to_string, File, OpenOptions};
-use regex::Regex;
 
 
 fn main() {

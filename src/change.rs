@@ -1,5 +1,5 @@
 use std::fs;
-use std::fs::{File, OpenOptions};
+use std::fs::{File};
 use std::io::{BufRead, BufReader, Write};
 use crate::canonical_columns;
 
@@ -39,7 +39,7 @@ pub(crate) fn change_value_main(cur_line: String) {
         criteria_value.pop();
     }
 
-    change_value(table_name, updated_column, new_column_value, criteria_column, criteria_value);
+    change_value(table_name, updated_column, new_column_value, criteria_column, criteria_value).expect("TODO: panic message");
 }
 
 fn change_value(table_name: String, updated_column: String, new_column_value: String, criteria_column: String, criteria_value: String) -> Result<(), Box<dyn std::error::Error>> {
@@ -70,7 +70,7 @@ fn change_value(table_name: String, updated_column: String, new_column_value: St
 
     for cur_line in line_iterator {
         let line = cur_line.unwrap();
-        let mut tokens = line.split(";");
+        let tokens = line.split(";");
         let token_vector: Vec<String> = tokens.map(|f| f.to_string()).collect();
 
         if token_vector[criteria_column_index] != criteria_value {

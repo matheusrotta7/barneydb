@@ -8,7 +8,7 @@ pub(crate) fn get_canonical_columns(table_header: String) -> IndexMap<String, (S
 
     for cur_column in columns {
         let mut tokens = cur_column.split_whitespace();
-        if (cur_column == " " || cur_column.is_empty()) {
+        if cur_column == " " || cur_column.is_empty() {
             break;
         }
 

@@ -1,6 +1,5 @@
-use std::fs;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader};
 use crate::canonical_columns;
 
 pub(crate) fn get_main(cur_line: String) {

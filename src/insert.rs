@@ -4,7 +4,7 @@ use indexmap::IndexMap;
 use regex::Regex;
 use crate::{canonical_columns, main_db};
 
-pub(crate) fn insert_into_table(lines: Vec<String>, mut i: usize, cur_line: String) {
+pub(crate) fn insert_into_table(lines: Vec<String>, i: usize, cur_line: String) {
     let table_name = get_table_name(cur_line);
     let column_map = get_column_map(lines.clone(), i + 1);
     insert_values_into_file(table_name, &column_map);
@@ -36,15 +36,14 @@ fn get_column_map(lines: Vec<String>, i:  usize) -> IndexMap<String, String> {
 fn get_table_name(cur_line: String) -> String {
     let mut tokens = cur_line.split_whitespace();
     let mut cur_token = tokens.next().unwrap();
-    let mut table_name = "uninitialized".to_string();
     assert_eq!(cur_token, "add");
     cur_token = tokens.next().unwrap();
     assert_eq!(cur_token, "new");
-    table_name = tokens.next().unwrap().to_string();
+    let table_name = tokens.next().unwrap().to_string();
     table_name
 }
 
-fn insert_values_into_file(table_name: String, valuesMap: &IndexMap<String, String>) {
+fn insert_values_into_file(table_name: String, values_map: &IndexMap<String, String>) {
     //open file
     //go to last line
     //create new line
@@ -57,14 +56,14 @@ fn insert_values_into_file(table_name: String, valuesMap: &IndexMap<String, Stri
 
     let mut column_values: Vec<String> = Vec::new();
     for (column_name, column_type) in canonical_column_map {
-        let option = valuesMap.get(&column_name);
+        let option = values_map.get(&column_name);
         let mut column_value_string = option.unwrap().to_string();
         if column_value_string.ends_with(',') {
             column_value_string.pop();
         }
         println!("{}", column_value_string);
 
-        if (!value_respects_type_constraints(column_type.clone(), column_value_string.clone())) {
+        if !value_respects_type_constraints(column_type.clone(), column_value_string.clone()) {
             println!("{} with value {} didn't respect type {}", column_name, column_value_string, column_type.0 + column_type.1.as_str());
             panic!("crash and burn");
         }

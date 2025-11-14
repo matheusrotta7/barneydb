@@ -7,10 +7,9 @@ use indexmap::IndexMap;
 use colored::Colorize;
 
 
-pub(crate) fn create_table(lines: &Vec<String>, mut i: usize, cur_line: String) {
+pub(crate) fn create_table(lines: &Vec<String>, cur_line: String) {
     let table_name = create_table_file(cur_line);
-    i += 1;
-    let column_map = get_columns(Vec::from(&lines[1..]), i);
+    let column_map = get_columns(Vec::from(&lines[1..]));
     let mut file = File::create(table_name.clone()).unwrap();
     for (column_name, column_type) in column_map.into_iter() {
         let (type_name, type_size) = column_type;
@@ -19,12 +18,12 @@ pub(crate) fn create_table(lines: &Vec<String>, mut i: usize, cur_line: String) 
         write!(file, "{} {} ; ", column_name, format!("{} {}", type_name, type_size)).unwrap();
     }
     writeln!(file).unwrap();
-    file.flush();
+    file.flush().expect("TODO: panic message");
     let msg = format!("Table {} created successfully", table_name);
     println!("{}", msg.green());
 }
 
-fn get_columns(lines: Vec<String>, i: usize) -> IndexMap<String, (String, String)> {
+fn get_columns(lines: Vec<String>) -> IndexMap<String, (String, String)> {
 
     let mut column_map: IndexMap<String, (String, String)> = IndexMap::new();
 
@@ -50,7 +49,7 @@ fn get_columns(lines: Vec<String>, i: usize) -> IndexMap<String, (String, String
         }
 
         let mut column_type = tokens.next().unwrap().to_string();
-        if (column_type.ends_with(",")) {
+        if column_type.ends_with(",") {
             column_type.pop();
         }
 
@@ -59,7 +58,7 @@ fn get_columns(lines: Vec<String>, i: usize) -> IndexMap<String, (String, String
             // safe: you still have the token
             column_quantifier = quantifier_token.to_string()
         }
-        if (column_quantifier.ends_with(",")) {
+        if column_quantifier.ends_with(",") {
             column_quantifier.pop();
         }
         column_map.insert(column_name,(column_type,column_quantifier.clone()));
@@ -94,7 +93,7 @@ fn create_table_file(cur_line: String) -> String {
         }
     }
 
-    if (table_name != "uninitialized") {
+    if table_name != "uninitialized" {
         if fs::exists(table_name.clone()).expect("REASON") {
             let msg = format!("Table {} already exists", table_name);
             println!("{}", msg.red());
